@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main role="main" class="container">
+    <h1 class="mt-5">Help</h1>
+    <h3>Zoeken:</h3>
+    <p>Naast de optie 'Snel zoeken' op de startpagina is 'Geavanceerd zoeken' mogelijk. Hierbij kun je
+        zoektermen combineren en een aantal filters gebruiken,
+        bijvoorbeeld alleen scripties van je eigen opleiding zoeken.</p>
+    <h4>Zoeken op woorden:</h4>
+    <p>Je kunt zoeken op het exacte woord of frase van opeenvolgende woorden. Bijvoorbeeld: 'onderzoek en
+        beleid' in één vak zal letterlijk zoeken naar de tekstfrase "<i>onderzoek en beleid</i>".<br />
+        Om records te vinden waarin zowel 'onderzoek' als 'beleid' worden genoemd vul je <i>onderzoek</i> in het
+        eerste vak in, kies je 'en' in het vakje rechts van het tweede veld, en vul je daarnaast <i>beleid</i>
+        in.</p>
+    <h4>Leestekens:</h4>
+    <p>Leestekens staan gelijk aan witruimte (spatie).</p>
+    <h4>Hoofd- en kleine letters:</h4>
+    <p>Bij het zoeken is er geen onderscheid tussen hoofd- en kleine letters.</p>
+    <h4>Jokertekens:</h4>
+    <p>Gebruik het teken * om te zoeken op een woordstam. 'taal*' vindt zowel 'taalgedrag' als 'taalverwerking'.</p>
+    <h4>Weergave:</h4>
+    <p>Klik op de titel van de korte weergave om een lange weergave te krijgen met alle verwijzende gegevens en
+        functies als een link naar de 'Volledige tekst'.</p>
+    <h4>Auteur:</h4>
+    <p>De auteursnamen zijn opgebouwd uit de achternaam en initialen. Vul bij zoeken op auteur vooral de
+        achternaam in.
+        Eventueel gevolgd door initialen als die bekend zijn. Zorg dan voor een komma tussen achternaam en
+        initialen, en een punt achter de initialen zoals in dit voorbeeld: publicaties van prof. Johan van
+        Benthem, vul dan in 'benthem, j.'. De HvA Kennisbank is niet bijzonder groot dus het is meestal
+        voldoende om alleen de achternaam te gebruiken.</p>
+</main>
+{% endblock content %}

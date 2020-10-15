@@ -32,6 +32,15 @@ def create_app(test_config=None):
     from . import blog
     app.register_blueprint(blog.bp)
 
+    from . import disclaimer
+    app.register_blueprint(disclaimer.bp)
+
+    from . import helpp
+    app.register_blueprint(helpp.bp)
+
+    from . import faq
+    app.register_blueprint(faq.bp)
+
     app.add_url_rule('/', endpoint='index')
     
     
