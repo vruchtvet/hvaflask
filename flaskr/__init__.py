@@ -6,7 +6,6 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
         SOLR='http://dpc-test.uba.uva.nl:8554/solr/',
     )
 
@@ -22,14 +21,6 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
-
-    """
-    from . import db
-    db.init_app(app)
-    
-    from . import auth
-    app.register_blueprint(auth.bp)
-    """
 
     from . import index
     app.register_blueprint(index.bp)
