@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+    <p>Resultaat: {{ results.hits.total}} hits</p>
+    <ol  start="{{ p|startlist:10 }}">
+        {% for hit in results %}
+        <li><a href="{% url 'search:detail-page' %}?q={{hit.meta.id}}">{{ hit.title }}</a><br/><span class="authors">{{ hit.authors|join:", " }}</span></li>
+        {% endfor %}
+    </ol>
+
+{% endblock content %}

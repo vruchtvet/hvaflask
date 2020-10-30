@@ -23,15 +23,17 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    """
     from . import db
     db.init_app(app)
     
     from . import auth
     app.register_blueprint(auth.bp)
+    """
 
-    from . import blog
-    app.register_blueprint(blog.bp)
-
+    from . import index
+    app.register_blueprint(index.bp)
+    
     from . import disclaimer
     app.register_blueprint(disclaimer.bp)
 
@@ -41,7 +43,7 @@ def create_app(test_config=None):
     from . import faq
     app.register_blueprint(faq.bp)
 
-    app.add_url_rule('/', endpoint='index')
+    #app.add_url_rule('/', endpoint='index')
     
     
     

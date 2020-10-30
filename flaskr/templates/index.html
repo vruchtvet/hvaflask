@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main role="main" class=container>
+  <h1 class="mt-5">Wat is HvA Kennisbank</h1>
+  <p class="lead">HvA Kennisbank is een dienst van de Bibliotheek van de Hogeschool van Amsterdam voor het wereldwijd
+    beschikbaar maken van scripties van de Hogeschool van Amsterdam.</p>
+  <form action="#" class="quicksearch" method="GET" onsubmit="return true;">
+    <table width="100%">
+      <tr valign="middle">
+        <td width="400px">
+          <input type="text" name="q1" size="60" id="wordlist" class="quicksearch" value="Snel zoeken"
+            onClick="if (this.value == 'Snel zoeken') this.value='';" />
+        </td>
+        <td>
+          <button class="button" type="submit"><span>Zoek &gt;&gt;</span></button>
+        </td>
+      </tr>
+    </table>
+  </form>
+</main>
+{% endblock %}
