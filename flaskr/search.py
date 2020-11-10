@@ -1,99 +1,111 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, current_app, url_for
+    Blueprint, flash, g, redirect, render_template, request, current_app, url_for, session
 )
 from werkzeug.exceptions import abort
-
-from flaskr.auth import login_required
-from flaskr.db import get_db
 from SolrClient import SolrClient
+from solrq import Q
+import math
+import re
 
-bp = Blueprint('blog', __name__)
+bp = Blueprint('search', __name__)
 
-@bp.route('/')
-def index():
-    db = get_db()
-    posts = db.execute(
-        'SELECT p.id, title, body, created, author_id, username'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' ORDER BY created DESC'
-    ).fetchall()
-    count = get_solr()
-    return render_template('blog/index.html', posts=posts, count=count)
+def set_key(dictionary, key, value):
+    if key not in dictionary:
+        dictionary[key] = value
+    else:
+        value += dictionary[key]
+        dictionary[key] = value
 
-@bp.route('/create', methods=('GET', 'POST'))
-@login_required
-def create():
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
+def collect(fac):
+    """
+    faculteiten kunnen op de volgende manieren voorkomen:
+    ["FNWI"]
+    ["FNWI / Instituut voor Theoretische Fysica"]
+    ["FNWI / Instituut voor Theoretische Fysica", "FNWI"]
+    ["FNWI / Instituut voor Theoretische Fysica", "FNWI / Instituut voor Theoretische Fysica""]
+    NB de tweede (of derde...) kan hetzelfde zijn maar kan ook 'n andere faculteit zijn
+    
+    """
+    items = dict()
+    for key, value in fac.items():
+        # faculteiten met evt. met 'n komma in de naam; die moet er uit voor de facet-list
+        key = re.sub(',', '', key)
+        key += ','
+        # first, split on comma
+        faculties = key.split(',')
+        # loop over results
+        for faculty in faculties:
+            if (faculty == ''):
+                continue
+            faculty += '/'
+            faculty, dummy = faculty.split('/', 1)
+            faculty = faculty.strip()
+            set_key(items, faculty, value)
+    return items
 
-        if not title:
-            error = 'Title is required.'
+def buildQuery():
+    """
+    faculteit kan meerdere keren voorkomen
+    vandaar de dict.getlist
+    zie: https://werkzeug.palletsprojects.com/en/1.0.x/datastructures/#werkzeug.datastructures.MultiDict
+    NB nu ff niet geimplementeerd
+    dit werkt niet: return Q(text="amsterdam", type="master", faculteit="FEB", faculteit="FMG")
+    dit werkt wel:  return Q(text="amsterdam", type="master", faculteit="FEB") & Q(faculteit="FMG")
+    """
+    dict = request.args
+    dict.getlist('faculteit')
+    return Q(**dict)
 
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            db.execute(
-                'INSERT INTO post (title, body, author_id)'
-                ' VALUES (?, ?, ?)',
-                (title, body, g.user['id'])
-            )
-            db.commit()
-            return redirect(url_for('blog.index'))
-    return render_template('blog/create.html')
-
-def get_solr():
+def simple_query(page):
+    d = dict()
+    query = buildQuery()
+    print(query)
     solr = SolrClient(current_app.config['SOLR'])
     res = solr.query('scripties',{
-            'q':'titel:muslim',
-            'facet':True,
-            'facet.field':'taal',
+            'q':query,
+            'rows':'0',
     })
-    return res.get_results_count()
+    count = res.get_num_found()
+    pages = math.ceil(count/10)
+    start = (page-1)*10
+    res = solr.query('scripties',{
+            'q':query,
+            'rows':'10',
+            'start':start,
+            'fl':'id,titel,auteur,jaar',
+            'facet':True,
+            'facet.field':['jaar','type', 'faculteit'],
+    })
+    facets = res.get_facets()
+    d['result'] = res
+    d['pages']  = pages
+    d['page']   = page
+    d['f_jaar'] = facets['jaar']
+    d['f_type'] = facets['type']
+    d['f_faculteit'] = collect(facets['faculteit'])
+    d['f'] = request.args.get('faculteit')
+    d['j'] = request.args.get('jaar')
+    d['t'] = request.args.get('type')
+    return d
 
-def get_post(id, check_author=True):
-    post = get_db().execute(
-        'SELECT p.id, title, body, created, author_id, username'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE p.id = ?',
-        (id,)
-    ).fetchone()
-    if post is None:
-        abort(404, "Post id {0} doesn't exist.".format(id))
-    if check_author and post['author_id'] != g.user['id']:
-        abort(403)
-    return post
+def detail_query(key):
+    solr = SolrClient(current_app.config['SOLR'])
+    q = 'id:{}'.format(key)
+    res = solr.query('scripties',{
+            'q':q,
+            'fl':'titel,auteur,jaar,supervisor,type,faculteit,opleiding,taal',
+    })
+    return res
 
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
-@login_required
-def update(id):
-    post = get_post(id)
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
-        if not title:
-            error = 'Title is required.'
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            db.execute(
-                'UPDATE post SET title = ?, body = ?'
-                ' WHERE id = ?',
-                (title, body, id)
-            )
-            db.commit()
-            return redirect(url_for('blog.index'))
-    return render_template('blog/update.html', post=post)
+@bp.route('/result/')
+@bp.route('/result/<int:page>/')
+def result(page=1):
+    result = simple_query(page)
+    if page > result['pages']:
+        abort(404)
+    return render_template('results.html', result=result, section="results")
 
-@bp.route('/<int:id>/delete', methods=('POST',))
-@login_required
-def delete(id):
-    get_post(id)
-    db = get_db()
-    db.execute('DELETE FROM post WHERE id = ?', (id,))
-    db.commit()
-    return redirect(url_for('blog.index'))
+@bp.route('/detail/<key>')
+def detail(key):
+    result = detail_query(key)
+    return render_template('detail.html', result=result)

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+    <h1 class="mt-5">Resultaten</h1>
+    <table class="table table-sm">
+        <tbody>
+            <tr>
+                <th scope="row">Titel</th>
+                <td>{{ result.docs[0].titel }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Auteur</th>
+                <td>{{ result.docs[0].auteur }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Jaar</th>
+                <td>{{ result.docs[0].jaar }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Supervisor</th>
+                <td>{{ result.docs[0].supervisor }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Type</th>
+                <td>{{ result.docs[0].type }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Faculteit</th>
+                <td>{{ result.docs[0].faculteit }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Opleiding</th>
+                <td>{{ result.docs[0].opleiding }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Taal</th>
+                <td>{{ result.docs[0].taal }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+{% endblock content %}

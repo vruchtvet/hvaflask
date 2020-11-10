@@ -1,13 +1,96 @@
 {% extends "base.html" %}
 
+{% block pagination %}
+    {% set previous = result.page - 1 %}
+    {% set next = result.page + 1 %}
+    <ul class="pagination justify-content-end">
+        <li class="page-item {% if result.page == 1 %}disabled{% endif %}">
+            <a class="page-link adl" href="{{ request.full_path|replce('/%s/' % result.page,'/1/') }}" tabindex="-1">First</a>
+        </li>
+        <li class="page-item {% if result.page == 1 %}disabled{% endif %}">
+            <a class="page-link al" href="{{ request.full_path|replce('/%s/' % result.page,'/%s/' % previous) }}" tabindex="-1">Previous</a>
+        </li>
+        <li class="page-item {% if result.page == result.pages %}disabled{% endif %}">
+            <a class="page-link ar" href="{{ request.full_path|replce('/%s/' % result.page,'/%s/' % next) }}" tabindex="-1">Next</a>
+        </li>
+        <li class="page-item {% if result.page == result.pages %}disabled{% endif %}">
+            <a class="page-link adr" href="{{ request.full_path|replce('/%s/' % result.page,'/%s/' % result.pages) }}" tabindex="-1">Last</a>
+        </li>
+    </ul>
+{% endblock pagination %}
+
+{% block facets %}
+    {% set t = result.t %}
+    {% set f = result.f %}
+    {% set j = result.j %}
+    {% set path = request.base_url|replce('/%s/' % result.page,'/')  %}
+    <h6>Type</h6>
+    <ul class="list-group">
+        {% for key, value in result.f_type.items() %}
+        {% if value > 0 %}
+        <li class="list-group-item d-flex justify-content-between align-items-top">
+            {% if key == t %}
+                <a href="{{ path }}?text={{ request.args.get('text') }}{% if f %}&faculteit={{ f }}{%endif %}{% if j %}&jaar={{ j }}{%endif %}">
+                    <i class="fas fa-times fa-xs"></i>&nbsp;{{ key }}
+                </a>
+            {% else %}
+                <a href="{{ path }}?text={{ request.args.get('text') }}&type={{ key }}{% if f %}&faculteit={{ f }}{% endif %}{% if j %}&jaar={{ j }}{% endif %}">{{ key }}
+                </a>
+            {% endif %}
+            <span class="badge">{{ value }}</span>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    <br/>
+    <h6>Faculteit</h6>
+    <ul class="list-group">
+        {% for key, value in result.f_faculteit.items() %}
+        {% if value > 0 %}
+        <li class="list-group-item d-flex justify-content-between align-items-top">
+            {% if key == f %}
+                <a href="{{ path }}?text={{ request.args.get('text') }}{% if t %}&type={{ t }}{% endif %}{% if j %}&jaar={{ j }}{% endif %}">
+                    <i class="fas fa-times fa-xs"></i>&nbsp;{{ key }}
+                </a>
+            {% else %}
+                <a href="{{ path }}?text={{ request.args.get('text') }}&faculteit={{ key }}{% if t %}&type={{ t }}{% endif %}{% if j %}&jaar={{ j }}{% endif %}">{{ key }}
+                </a>
+            {% endif %}
+            <span class="badge">{{ value }}</span>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    <br/>
+    <h6>Jaar</h6>
+    <ul class="list-group">
+        {% for key, value in result.f_jaar.items()|sort(reverse=True) %}
+        {% if value > 0 %}
+        <li class="list-group-item d-flex justify-content-between align-items-top">
+            {% if key == j %}
+                <a href="{{ path }}?text={{ request.args.get('text') }}{% if t %}&type={{ t }}{%endif %}{% if f %}&faculteit={{ f }}{%endif %}"><i class="fas fa-times fa-xs"></i>&nbsp;{{ key }}</a>
+            {% else %}
+                <a href="{{ path }}?text={{ request.args.get('text') }}&jaar={{ key }}{% if t %}&type={{ t }}{%endif %}{% if f %}&faculteit={{ f }}{%endif %}">{{ key }}</a>
+            {% endif %}
+            <span class="badge">{{ value }}</span>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+{% endblock facets %}
 
 {% block content %}
-
-    <p>Resultaat: {{ results.hits.total}} hits</p>
-    <ol  start="{{ p|startlist:10 }}">
-        {% for hit in results %}
-        <li><a href="{% url 'search:detail-page' %}?q={{hit.meta.id}}">{{ hit.title }}</a><br/><span class="authors">{{ hit.authors|join:", " }}</span></li>
-        {% endfor %}
+    <h1 class="mt-5">Resultaten</h1>
+    <p>Hits: {{ result.result.get_num_found() }}</p>
+    <ol>
+    {% for record in result.result.docs %}
+        <li>
+            <span class="emphasis">
+                <a href="{{ url_for('search.detail', key=record.id) }}">{{ record.titel }}</a>
+            </span>
+            <br/>
+            <span>{{ record.auteur }}&nbsp;/&nbsp;{{ record.jaar }}</span>
+        </li>
+    {% endfor %}
     </ol>
-
 {% endblock content %}

@@ -1,5 +1,6 @@
 import os
-from flask import Flask
+import re
+from flask import (Flask, render_template)
 
 def create_app(test_config=None):
     # create and configure the app
@@ -33,6 +34,24 @@ def create_app(test_config=None):
 
     from . import faq
     app.register_blueprint(faq.bp)
+
+    from . import search
+    app.register_blueprint(search.bp)
+    @app.template_filter('replce')
+    def replce(url, page, replacement):
+        '''
+        Search for 'page' (/\d+/) in the url and replace with new page.
+        When not found (ie /result/?tekstToLookFor), just insert the replacement page
+        '''
+        x = re.search(page, url)
+        if x is None:
+            return url[:url.find('/?')] + replacement + url[url.find('?'):]
+        elif x:
+            return re.sub(page, replacement, url)
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html')
 
     #app.add_url_rule('/', endpoint='index')
     
